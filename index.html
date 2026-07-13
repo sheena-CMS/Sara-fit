@@ -118,7 +118,7 @@
       border:1.5px solid var(--border);border-radius:14px;margin-bottom:8px;
       cursor:pointer;transition:all .18s;user-select:none}
     .ex-row.done{border-color:var(--neon);background:var(--neon-dim)}
-    .ex-chk{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);
+    .ex-chk{width:26px;height:26px;border-radius:50%;border:2px solid #666;
       display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s}
     .ex-row.done .ex-chk{background:var(--neon);border-color:var(--neon)}
     .ex-name{font-size:16px;font-weight:600}
@@ -210,8 +210,11 @@
         </div>
       </div>
 
-      <div class="quote-card">
-        <div class="q-tag">✦ Quote of the Day</div>
+      <div class="quote-card" style="cursor:pointer" onclick="nextQuote()">
+        <div class="q-tag" style="display:flex;justify-content:space-between;align-items:center">
+          <span>✦ Quote of the Day</span>
+          <span style="font-size:16px;opacity:.7">↻</span>
+        </div>
         <div class="q-body" id="h-quote">Loading…</div>
       </div>
 
@@ -338,15 +341,17 @@ const API = 'https://script.google.com/macros/s/AKfycbylUnhBhLW6zhBfFKdgfST4_plh
 const MEAL_TYPES = ['Breakfast','Recess','Lunch','Dinner','Pre Workout','Post Workout'];
 
 // ─── STATE ────────────────────────────────────────────────────
-let exercises = {};        // { 'Day 1': ['Squats', ...] }
-let ticked    = {};        // { 'Day 1': Set }
-let activeDay = '';
+let exercises  = {};       // { 'Day 1': ['Squats', ...] }
+let ticked     = {};       // { 'Day 1': Set }
+let activeDay  = '';
 let todayMeals = [];
-let gymLog = {};           // { 'YYYY-MM-DD': { day, duration } }
-let calBase = new Date();
+let gymLog     = {};       // { 'YYYY-MM-DD': { day, duration } }
+let calBase    = new Date();
 let timerStart = localStorage.getItem('sf_ts') ? +localStorage.getItem('sf_ts') : null;
 let timerTick  = null;
 let pending    = null;
+let allQuotes  = [];
+let quoteIdx   = 0;
 
 // ─── BOOT ─────────────────────────────────────────────────────
 (async function boot() {
@@ -390,9 +395,14 @@ async function loadExercises() {
 }
 
 function renderDays() {
-  document.getElementById('day-tabs').innerHTML = Object.keys(exercises).map(d =>
-    `<button class="day-btn ${d===activeDay?'on':''}" onclick="pickDay(${JSON.stringify(d)})">${d}</button>`
+  document.getElementById('day-tabs').innerHTML = Object.keys(exercises).map((d,i) =>
+    `<button class="day-btn ${d===activeDay?'on':''}" data-di="${i}">${d}</button>`
   ).join('');
+  document.querySelectorAll('#day-tabs .day-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      pickDay(Object.keys(exercises)[+btn.dataset.di]);
+    });
+  });
 }
 
 function pickDay(d) { activeDay = d; renderDays(); renderEx(); }
@@ -473,6 +483,8 @@ async function saveWorkout() {
     resetTimer();
     ticked[day] = new Set();
     renderEx();
+    // small delay so the script finishes writing before we re-read
+    await new Promise(r => setTimeout(r, 1200));
     await loadLog();
     homeStats();
     pending = null;
@@ -550,13 +562,27 @@ async function saveMeal() {
 // ─── QUOTES ───────────────────────────────────────────────────
 async function loadQuote() {
   try {
+    // fetch all quotes by using day=0 then read the full list via a bulk fetch
     const doy = Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0))/86400000);
     const d = await get({ action:'quote', day:doy });
-    document.getElementById('h-quote').textContent =
-      d.quote || '"Push yourself — no one else is going to do it for you."';
+    allQuotes = d.all || [];
+    quoteIdx  = doy % (allQuotes.length || 1);
+    showQuote(d.quote || '"Push yourself — no one else is going to do it for you."');
   } catch(e) {
-    document.getElementById('h-quote').textContent = '"Push yourself — no one else is going to do it for you."';
+    showQuote('"Push yourself — no one else is going to do it for you."');
   }
+}
+
+function showQuote(text) {
+  const el = document.getElementById('h-quote');
+  el.style.opacity = '0';
+  setTimeout(() => { el.textContent = text; el.style.transition='opacity .4s'; el.style.opacity='1'; }, 200);
+}
+
+function nextQuote() {
+  if (!allQuotes.length) { loadQuote(); return; }
+  quoteIdx = (quoteIdx + 1) % allQuotes.length;
+  showQuote(allQuotes[quoteIdx]);
 }
 
 // ─── GYM LOG / CALENDAR ──────────────────────────────────────
