@@ -361,23 +361,6 @@ let quoteIdx   = 0;
 (async function boot() {
   const today = new Date();
 
-  // Daily neon colour rotation
-  const NEONS = [
-    { hex:'#39FF14', rgb:'57,255,20'   },  // green
-    { hex:'#FF6EC7', rgb:'255,110,199' },  // pink
-    { hex:'#00F5FF', rgb:'0,245,255'   },  // cyan
-    { hex:'#FFE600', rgb:'255,230,0'   },  // yellow
-    { hex:'#BF5FFF', rgb:'191,95,255'  },  // purple
-    { hex:'#FF6600', rgb:'255,102,0'   },  // orange
-    { hex:'#00FF9F', rgb:'0,255,159'   },  // mint
-  ];
-  const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
-  const nc = NEONS[dayOfYear % NEONS.length];
-  const root = document.documentElement.style;
-  root.setProperty('--neon',     nc.hex);
-  root.setProperty('--neon-dim', `rgba(${nc.rgb},.1)`);
-  root.setProperty('--neon-glow',`0 0 12px rgba(${nc.rgb},.7),0 0 28px rgba(${nc.rgb},.25)`);
-
   document.getElementById('wo-date').textContent = niceDate(today);
   document.getElementById('m-date').textContent  = niceDate(today);
 
@@ -725,11 +708,22 @@ function homeStats() {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────
+const PAGE_NEONS = {
+  home:     { hex:'#39FF14', rgb:'57,255,20'   },
+  workout:  { hex:'#FF6EC7', rgb:'255,110,199' },
+  meals:    { hex:'#00F5FF', rgb:'0,245,255'   },
+  calendar: { hex:'#FFE600', rgb:'255,230,0'   },
+};
 function go(name) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.ni').forEach(b=>b.classList.remove('on'));
   document.getElementById('s-'+name).classList.add('on');
   document.getElementById('ni-'+name).classList.add('on');
+  const nc = PAGE_NEONS[name] || PAGE_NEONS.home;
+  const r = document.documentElement.style;
+  r.setProperty('--neon',      nc.hex);
+  r.setProperty('--neon-dim',  `rgba(${nc.rgb},.1)`);
+  r.setProperty('--neon-glow', `0 0 12px rgba(${nc.rgb},.7),0 0 28px rgba(${nc.rgb},.25)`);
   if(name==='calendar') renderCal();
 }
 
