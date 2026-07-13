@@ -12,7 +12,14 @@
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     :root{
       --bg:#0A0A0A;--card:#111;--card2:#181818;--border:#222;
-      --neon:#39FF14;--neon-dim:rgba(57,255,20,.1);
+      --neon:#39FF14;
+      --neon-dim:rgba(57,255,20,.10);
+      --neon-06:rgba(57,255,20,.06);
+      --neon-07:rgba(57,255,20,.07);
+      --neon-45:rgba(57,255,20,.45);
+      --neon-50:rgba(57,255,20,.50);
+      --neon-60:rgba(57,255,20,.60);
+      --neon-90:rgba(57,255,20,.90);
       --neon-glow:0 0 12px rgba(57,255,20,.7),0 0 28px rgba(57,255,20,.25);
       --text:#fff;--muted:#888;--danger:#FF3B30;
       --st:env(safe-area-inset-top,20px);--sb:env(safe-area-inset-bottom,0px)
@@ -51,7 +58,7 @@
       font-size:10px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:color .2s}
     .ni svg{width:22px;height:22px}
     .ni.on{color:var(--neon)}
-    .ni.on svg{filter:drop-shadow(0 0 6px rgba(57,255,20,.9))}
+    .ni.on svg{filter:drop-shadow(0 0 6px var(--neon-90))}
 
     /* typography */
     .pg-title{font-size:28px;font-weight:800;margin-bottom:2px}
@@ -62,7 +69,7 @@
     /* cards */
     .card{background:var(--card);border:1px solid var(--border);border-radius:18px;
       padding:18px;margin-bottom:12px}
-    .card-glow{border-color:var(--neon);box-shadow:0 0 24px rgba(57,255,20,.07)}
+    .card-glow{border-color:var(--neon);box-shadow:0 0 24px var(--neon-07)}
 
     /* buttons */
     .btn{width:100%;padding:16px;border:none;border-radius:14px;font-size:16px;
@@ -88,7 +95,7 @@
     .greet-name{font-size:26px;font-weight:800;margin-top:2px}
     .quote-card{background:linear-gradient(145deg,#111,#0d0d0d);border:1px solid var(--neon);
       border-radius:20px;padding:22px 20px;margin-bottom:14px;
-      box-shadow:0 0 30px rgba(57,255,20,.06)}
+      box-shadow:0 0 30px var(--neon-06)}
     .q-tag{font-size:10px;font-weight:700;color:var(--neon);letter-spacing:2px;
       text-transform:uppercase;margin-bottom:12px}
     .q-body{font-size:17px;font-weight:500;line-height:1.55;font-style:italic}
@@ -111,10 +118,10 @@
       background:var(--card);color:var(--muted);font-size:14px;font-weight:700;cursor:pointer;
       transition:all .2s;white-space:nowrap}
     .day-btn.on{background:var(--neon);color:#000;border-color:var(--neon);
-      box-shadow:0 0 14px rgba(57,255,20,.5)}
+      box-shadow:0 0 14px var(--neon-50)}
     .prog-bg{background:var(--border);border-radius:4px;height:6px;margin-bottom:18px;overflow:hidden}
     .prog-fill{background:var(--neon);height:100%;border-radius:4px;transition:width .3s;
-      box-shadow:0 0 8px rgba(57,255,20,.6)}
+      box-shadow:0 0 8px var(--neon-60)}
     .ex-row{display:flex;align-items:center;gap:14px;padding:16px;background:var(--card);
       border:1.5px solid var(--border);border-radius:14px;margin-bottom:8px;
       cursor:pointer;transition:all .18s;user-select:none}
@@ -128,14 +135,14 @@
     /* ── MEALS ──────────────────────── */
     .tot-band{background:var(--card);border:1.5px solid var(--neon);border-radius:18px;
       padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;
-      text-align:center;margin-bottom:14px;box-shadow:0 0 24px rgba(57,255,20,.07)}
+      text-align:center;margin-bottom:14px;box-shadow:0 0 24px var(--neon-07)}
     .tot-big{font-size:38px;font-weight:800;color:var(--neon);line-height:1}
     .tot-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;
       letter-spacing:1.2px;margin-top:6px}
     .slot-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
     .slot-card{background:var(--card);border:1.5px solid var(--border);border-radius:14px;
       padding:14px 12px;text-align:center}
-    .slot-card.has{border-color:rgba(57,255,20,.45)}
+    .slot-card.has{border-color:var(--neon-45)}
     .slot-name{font-size:13px;font-weight:700;margin-bottom:4px}
     .slot-cals{font-size:11px;color:var(--muted)}
     .slot-card.has .slot-cals{color:var(--neon)}
@@ -159,7 +166,7 @@
       border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
     .cal-cell.today{border:1.5px solid var(--neon);color:var(--neon)}
     .cal-cell.gym{background:var(--neon);color:#000;font-weight:800;
-      box-shadow:0 0 10px rgba(57,255,20,.5)}
+      box-shadow:0 0 10px var(--neon-50)}
     .cal-detail{margin-top:18px;background:var(--card);border:1px solid var(--border);
       border-radius:16px;padding:18px;display:none}
     .cal-det-date{font-weight:700;font-size:16px;margin-bottom:6px}
@@ -721,9 +728,16 @@ function go(name) {
   document.getElementById('ni-'+name).classList.add('on');
   const nc = PAGE_NEONS[name] || PAGE_NEONS.home;
   const r = document.documentElement.style;
+  const c = nc.rgb;
   r.setProperty('--neon',      nc.hex);
-  r.setProperty('--neon-dim',  `rgba(${nc.rgb},.1)`);
-  r.setProperty('--neon-glow', `0 0 12px rgba(${nc.rgb},.7),0 0 28px rgba(${nc.rgb},.25)`);
+  r.setProperty('--neon-dim',  `rgba(${c},.10)`);
+  r.setProperty('--neon-06',   `rgba(${c},.06)`);
+  r.setProperty('--neon-07',   `rgba(${c},.07)`);
+  r.setProperty('--neon-45',   `rgba(${c},.45)`);
+  r.setProperty('--neon-50',   `rgba(${c},.50)`);
+  r.setProperty('--neon-60',   `rgba(${c},.60)`);
+  r.setProperty('--neon-90',   `rgba(${c},.90)`);
+  r.setProperty('--neon-glow', `0 0 12px rgba(${c},.7),0 0 28px rgba(${c},.25)`);
   if(name==='calendar') renderCal();
 }
 
