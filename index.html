@@ -367,17 +367,12 @@ let pending    = null;
   document.getElementById('app').classList.add('ready');
 })();
 
-// ─── API ──────────────────────────────────────────────────────
+// ─── API — all requests use GET (Apps Script POST drops body on redirect) ──
 async function get(params) {
   const u = new URL(API);
-  Object.entries(params).forEach(([k,v]) => u.searchParams.set(k, v));
+  Object.entries(params).forEach(([k,v]) => u.searchParams.set(k, String(v)));
   const r = await fetch(u);
   return r.json();
-}
-
-async function post(params) {
-  const body = new URLSearchParams(params);
-  await fetch(API, { method:'POST', body });
 }
 
 // ─── EXERCISES ───────────────────────────────────────────────
@@ -409,12 +404,19 @@ function renderEx() {
   const pct  = exs.length ? Math.round(done.size / exs.length * 100) : 0;
   document.getElementById('prog').style.width = pct + '%';
   document.getElementById('ex-list').innerHTML = exs.length
-    ? exs.map(ex => `
-        <div class="ex-row ${done.has(ex)?'done':''}" onclick="toggleEx(${JSON.stringify(ex)})">
+    ? exs.map((ex,i) => `
+        <div class="ex-row ${done.has(ex)?'done':''}" data-i="${i}">
           <div class="ex-chk">${done.has(ex)?'<svg width="14" height="14" viewBox="0 0 24 24" fill="#000"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>':''}</div>
           <div class="ex-name">${ex}</div>
         </div>`).join('')
     : '<p class="empty">No exercises for this day yet.<br>Add them to the Workouts tab in your sheet.</p>';
+
+  // attach tap handlers using index to avoid quote issues
+  document.querySelectorAll('#ex-list .ex-row').forEach(function(row) {
+    row.addEventListener('click', function() {
+      toggleEx((exercises[activeDay] || [])[+row.dataset.i]);
+    });
+  });
 }
 
 function toggleEx(name) {
@@ -463,7 +465,7 @@ async function saveWorkout() {
   document.getElementById('stop-modal').classList.remove('show');
   const { start, end, mins, day, exDone } = pending;
   try {
-    await post({
+    await get({
       action:'logWorkout', date:isoDate(new Date(start)), day,
       exercises:exDone.join(', '), start:clock(new Date(start)),
       end:clock(new Date(end)), duration:mins
@@ -537,7 +539,7 @@ async function saveMeal() {
   const cals = document.getElementById('m-cal').value;
   if (!name||!cals) { toast('Fill in food name and calories'); return; }
   try {
-    await post({ action:'addMeal', date:isoDate(new Date()),
+    await get({ action:'addMeal', date:isoDate(new Date()),
       type:document.getElementById('m-type').value,
       name, cals, prot:document.getElementById('m-pro').value||'0' });
     document.getElementById('meal-modal').classList.remove('show');
@@ -592,10 +594,22 @@ function calClick(ds) {
   if(g){
     const h=Math.floor(g.duration/60),m=g.duration%60;
     document.getElementById('cal-det-info').innerHTML=
-      `<span style="color:var(--neon)">✓ Gym day</span> · ${g.day||''} · ${h?h+'h '+m+'m':g.duration+' min'}`;
+      `<span style="color:var(--neon)">✓ Gym day</span> · ${g.day||''} · ${h?h+'h '+m+'m':g.duration+' min'}
+      <br><button onclick="deleteWorkout('${ds}')" style="margin-top:12px;background:var(--danger);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;">🗑 Delete this workout</button>`;
   } else {
     document.getElementById('cal-det-info').textContent='Rest day 🛋️';
   }
+}
+
+async function deleteWorkout(ds) {
+  if (!confirm(`Delete workout on ${ds}?`)) return;
+  try {
+    await get({ action:'deleteWorkout', date:ds });
+    await loadLog();
+    homeStats();
+    document.getElementById('cal-detail').style.display='none';
+    toast('Workout deleted');
+  } catch(e) { toast('Error deleting'); }
 }
 
 function calShift(n){ calBase.setMonth(calBase.getMonth()+n); renderCal(); }
