@@ -360,6 +360,24 @@ let quoteIdx   = 0;
 // ─── BOOT ─────────────────────────────────────────────────────
 (async function boot() {
   const today = new Date();
+
+  // Daily neon colour rotation
+  const NEONS = [
+    { hex:'#39FF14', rgb:'57,255,20'   },  // green
+    { hex:'#FF6EC7', rgb:'255,110,199' },  // pink
+    { hex:'#00F5FF', rgb:'0,245,255'   },  // cyan
+    { hex:'#FFE600', rgb:'255,230,0'   },  // yellow
+    { hex:'#BF5FFF', rgb:'191,95,255'  },  // purple
+    { hex:'#FF6600', rgb:'255,102,0'   },  // orange
+    { hex:'#00FF9F', rgb:'0,255,159'   },  // mint
+  ];
+  const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+  const nc = NEONS[dayOfYear % NEONS.length];
+  const root = document.documentElement.style;
+  root.setProperty('--neon',     nc.hex);
+  root.setProperty('--neon-dim', `rgba(${nc.rgb},.1)`);
+  root.setProperty('--neon-glow',`0 0 12px rgba(${nc.rgb},.7),0 0 28px rgba(${nc.rgb},.25)`);
+
   document.getElementById('wo-date').textContent = niceDate(today);
   document.getElementById('m-date').textContent  = niceDate(today);
 
