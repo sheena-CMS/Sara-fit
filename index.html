@@ -556,11 +556,14 @@ async function copyYesterday() {
   const btn = document.getElementById('btn-template');
   btn.textContent = 'Copying…'; btn.disabled = true;
   try {
-    const yest = new Date();
-    yest.setDate(yest.getDate() - 1);
-    const d = await get({ action:'meals', date:isoDate(yest) });
-    const yMeals = d.meals || [];
-    if (!yMeals.length) { toast('No meals found for yesterday'); btn.textContent='↺ Copy Yesterday'; btn.disabled=false; return; }
+    let yMeals = [];
+    for (let days = 1; days <= 5; days++) {
+      const d2 = new Date();
+      d2.setDate(d2.getDate() - days);
+      const res = await get({ action:'meals', date:isoDate(d2) });
+      if (res.meals && res.meals.length) { yMeals = res.meals; break; }
+    }
+    if (!yMeals.length) { toast('No recent meals found'); btn.textContent='↺ Copy Yesterday'; btn.disabled=false; return; }
     const existing = todayMeals.map(m => m.type+m.name);
     let added = 0;
     for (const m of yMeals) {
