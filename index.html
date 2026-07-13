@@ -71,6 +71,7 @@
     .btn-neon{background:var(--neon);color:#000;box-shadow:var(--neon-glow)}
     .btn-ghost{background:var(--card);color:var(--muted);border:1px solid var(--border)}
     .btn-danger{background:var(--danger);color:#fff}
+    .btn-outline{background:transparent;color:var(--neon);border:1.5px solid var(--neon)}
 
     /* inputs */
     .inp{width:100%;padding:15px 16px;background:var(--card);border:1.5px solid var(--border);
@@ -268,7 +269,10 @@
       <div class="sec-lbl">By Meal</div>
       <div class="slot-grid" id="meal-slots"></div>
 
-      <button class="btn btn-neon" onclick="openMeal()" style="margin-bottom:18px">+ Add Food</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
+        <button class="btn btn-neon" onclick="openMeal()">+ Add Food</button>
+        <button class="btn btn-outline" onclick="loadTemplate()" id="btn-template">↺ Usual Meals</button>
+      </div>
 
       <div class="sec-lbl">Today's Food</div>
       <div class="card" id="food-list"><div class="empty">No food logged yet</div></div>
@@ -531,11 +535,40 @@ function renderMeals() {
   }).join('');
 
   document.getElementById('food-list').innerHTML = todayMeals.length
-    ? todayMeals.map(m=>`<div class="food-row">
+    ? todayMeals.map((m,i)=>`<div class="food-row">
         <div><div class="food-name">${m.name}</div><div class="food-type">${m.type}</div></div>
-        <div class="food-mac">${m.cals} cal · ${m.prot}g</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="food-mac">${m.cals} cal · ${m.prot}g</div>
+          <button data-mi="${i}" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;line-height:1">×</button>
+        </div>
       </div>`).join('')
     : '<div class="empty">No food logged yet</div>';
+
+  document.querySelectorAll('#food-list button[data-mi]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const m = todayMeals[+btn.dataset.mi];
+      if (m) deleteMeal(m.type, m.name);
+    });
+  });
+}
+
+async function loadTemplate() {
+  const btn = document.getElementById('btn-template');
+  btn.textContent = 'Loading…'; btn.disabled = true;
+  try {
+    const d = await get({ action:'loadTemplate', date:isoDate(new Date()) });
+    await loadMeals();
+    toast(d.added > 0 ? `${d.added} meals loaded!` : 'Already loaded today');
+  } catch(e) { toast('Error loading template'); }
+  btn.textContent = '↺ Usual Meals'; btn.disabled = false;
+}
+
+async function deleteMeal(type, name) {
+  try {
+    await get({ action:'deleteMeal', date:isoDate(new Date()), type, name });
+    await loadMeals();
+    toast('Removed');
+  } catch(e) { toast('Error removing'); }
 }
 
 function openMeal() {
