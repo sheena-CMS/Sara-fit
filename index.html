@@ -271,7 +271,7 @@
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
         <button class="btn btn-neon" onclick="openMeal()">+ Add Food</button>
-        <button class="btn btn-outline" onclick="loadTemplate()" id="btn-template">↺ Usual Meals</button>
+        <button class="btn btn-outline" onclick="copyYesterday()" id="btn-template">↺ Copy Yesterday</button>
       </div>
 
       <div class="sec-lbl">Today's Food</div>
@@ -552,15 +552,15 @@ function renderMeals() {
   });
 }
 
-async function loadTemplate() {
+async function copyYesterday() {
   const btn = document.getElementById('btn-template');
-  btn.textContent = 'Loading…'; btn.disabled = true;
+  btn.textContent = 'Copying…'; btn.disabled = true;
   try {
-    const d = await get({ action:'loadTemplate', date:isoDate(new Date()) });
+    const d = await get({ action:'copyYesterday', date:isoDate(new Date()) });
     await loadMeals();
-    toast(d.added > 0 ? `${d.added} meals loaded!` : 'Already loaded today');
-  } catch(e) { toast('Error loading template'); }
-  btn.textContent = '↺ Usual Meals'; btn.disabled = false;
+    toast(d.added > 0 ? `${d.added} meals copied from yesterday!` : d.ok ? 'Already copied today' : 'No meals found for yesterday');
+  } catch(e) { toast('Error copying meals'); }
+  btn.textContent = '↺ Copy Yesterday'; btn.disabled = false;
 }
 
 async function deleteMeal(type, name) {
