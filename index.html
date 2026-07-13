@@ -556,9 +556,20 @@ async function copyYesterday() {
   const btn = document.getElementById('btn-template');
   btn.textContent = 'Copying…'; btn.disabled = true;
   try {
-    const d = await get({ action:'copyYesterday', date:isoDate(new Date()) });
+    const yest = new Date();
+    yest.setDate(yest.getDate() - 1);
+    const d = await get({ action:'meals', date:isoDate(yest) });
+    const yMeals = d.meals || [];
+    if (!yMeals.length) { toast('No meals found for yesterday'); btn.textContent='↺ Copy Yesterday'; btn.disabled=false; return; }
+    const existing = todayMeals.map(m => m.type+m.name);
+    let added = 0;
+    for (const m of yMeals) {
+      if (existing.includes(m.type+m.name)) continue;
+      await get({ action:'addMeal', date:isoDate(new Date()), type:m.type, name:m.name, cals:m.cals, prot:m.prot });
+      added++;
+    }
     await loadMeals();
-    toast(d.added > 0 ? `${d.added} meals copied from yesterday!` : d.ok ? 'Already copied today' : 'No meals found for yesterday');
+    toast(added > 0 ? added+' meals copied!' : 'Already copied today');
   } catch(e) { toast('Error copying meals'); }
   btn.textContent = '↺ Copy Yesterday'; btn.disabled = false;
 }
